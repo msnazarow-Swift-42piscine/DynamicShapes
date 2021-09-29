@@ -10,9 +10,12 @@
 		3E5F75732703570200F43A93 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E5F75722703570200F43A93 /* AppDelegate.swift */; };
 		3E5F75752703570200F43A93 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E5F75742703570200F43A93 /* SceneDelegate.swift */; };
 		3E5F75772703570200F43A93 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E5F75762703570200F43A93 /* ViewController.swift */; };
-		3E5F757A2703570200F43A93 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3E5F75782703570200F43A93 /* Main.storyboard */; };
 		3E5F757C2703570300F43A93 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3E5F757B2703570300F43A93 /* Assets.xcassets */; };
 		3E5F757F2703570300F43A93 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3E5F757D2703570300F43A93 /* LaunchScreen.storyboard */; };
+		3E8756932703BEF700B466B7 /* UIDynamicBehavior+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E8756922703BEF700B466B7 /* UIDynamicBehavior+Ext.swift */; };
+		3EF543102703785000384EE1 /* ShapeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EF5430F2703785000384EE1 /* ShapeView.swift */; };
+		3EF5431827037F1300384EE1 /* UIColor+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EF5431727037F1300384EE1 /* UIColor+Ext.swift */; };
+		3EF5431F270395F900384EE1 /* HapticsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EF5431E270395F900384EE1 /* HapticsManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,10 +23,13 @@
 		3E5F75722703570200F43A93 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3E5F75742703570200F43A93 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		3E5F75762703570200F43A93 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
-		3E5F75792703570200F43A93 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		3E5F757B2703570300F43A93 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3E5F757E2703570300F43A93 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		3E5F75802703570300F43A93 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		3E8756922703BEF700B466B7 /* UIDynamicBehavior+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIDynamicBehavior+Ext.swift"; sourceTree = "<group>"; };
+		3EF5430F2703785000384EE1 /* ShapeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapeView.swift; sourceTree = "<group>"; };
+		3EF5431727037F1300384EE1 /* UIColor+Ext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIColor+Ext.swift"; sourceTree = "<group>"; };
+		3EF5431E270395F900384EE1 /* HapticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticsManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,15 +62,58 @@
 		3E5F75712703570200F43A93 /* DynamicShapes */ = {
 			isa = PBXGroup;
 			children = (
-				3E5F75722703570200F43A93 /* AppDelegate.swift */,
+				3EF5431D270395E800384EE1 /* Services */,
+				3EF5431627037F1300384EE1 /* Extentions */,
+				3EF5430E2703783700384EE1 /* Components */,
+				3EF5431C270395DD00384EE1 /* View */,
+				3E5F75922703767A00F43A93 /* Supported */,
+			);
+			path = DynamicShapes;
+			sourceTree = "<group>";
+		};
+		3E5F75922703767A00F43A93 /* Supported */ = {
+			isa = PBXGroup;
+			children = (
 				3E5F75742703570200F43A93 /* SceneDelegate.swift */,
-				3E5F75762703570200F43A93 /* ViewController.swift */,
-				3E5F75782703570200F43A93 /* Main.storyboard */,
+				3E5F75722703570200F43A93 /* AppDelegate.swift */,
 				3E5F757B2703570300F43A93 /* Assets.xcassets */,
 				3E5F757D2703570300F43A93 /* LaunchScreen.storyboard */,
 				3E5F75802703570300F43A93 /* Info.plist */,
 			);
-			path = DynamicShapes;
+			path = Supported;
+			sourceTree = "<group>";
+		};
+		3EF5430E2703783700384EE1 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				3EF5430F2703785000384EE1 /* ShapeView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		3EF5431627037F1300384EE1 /* Extentions */ = {
+			isa = PBXGroup;
+			children = (
+				3EF5431727037F1300384EE1 /* UIColor+Ext.swift */,
+				3E8756922703BEF700B466B7 /* UIDynamicBehavior+Ext.swift */,
+			);
+			path = Extentions;
+			sourceTree = "<group>";
+		};
+		3EF5431C270395DD00384EE1 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				3E5F75762703570200F43A93 /* ViewController.swift */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+		3EF5431D270395E800384EE1 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				3EF5431E270395F900384EE1 /* HapticsManager.swift */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -126,7 +175,6 @@
 			files = (
 				3E5F757F2703570300F43A93 /* LaunchScreen.storyboard in Resources */,
 				3E5F757C2703570300F43A93 /* Assets.xcassets in Resources */,
-				3E5F757A2703570200F43A93 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -139,6 +187,10 @@
 			files = (
 				3E5F75772703570200F43A93 /* ViewController.swift in Sources */,
 				3E5F75732703570200F43A93 /* AppDelegate.swift in Sources */,
+				3EF5431F270395F900384EE1 /* HapticsManager.swift in Sources */,
+				3EF5431827037F1300384EE1 /* UIColor+Ext.swift in Sources */,
+				3E8756932703BEF700B466B7 /* UIDynamicBehavior+Ext.swift in Sources */,
+				3EF543102703785000384EE1 /* ShapeView.swift in Sources */,
 				3E5F75752703570200F43A93 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -146,14 +198,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
-		3E5F75782703570200F43A93 /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				3E5F75792703570200F43A93 /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
 		3E5F757D2703570300F43A93 /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -288,7 +332,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = L63NHFJ3AD;
-				INFOPLIST_FILE = DynamicShapes/Info.plist;
+				INFOPLIST_FILE = DynamicShapes/Supported/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -307,7 +351,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = L63NHFJ3AD;
-				INFOPLIST_FILE = DynamicShapes/Info.plist;
+				INFOPLIST_FILE = DynamicShapes/Supported/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

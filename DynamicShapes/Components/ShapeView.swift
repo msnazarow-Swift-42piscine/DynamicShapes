@@ -8,7 +8,6 @@
 import UIKit
 
 class ShapeView: UIView {
-
     enum Shape: Int, CaseIterable {
         case ellipse = 0
         case rectangle

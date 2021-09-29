@@ -10,7 +10,26 @@ import CoreMotion
 import CoreHaptics
 import AudioToolbox
 
-class ViewController: UIViewController, UICollisionBehaviorDelegate {
+class ViewController: UIViewController {
+    let label: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.textColor = .gray
+        label.text = "Animated"
+        return label
+    }()
+
+    let animateSwitch: UISwitch = {
+        let animateSwitch = UISwitch()
+        animateSwitch.setOn(true, animated: true)
+        animateSwitch.translatesAutoresizingMaskIntoConstraints = false
+        animateSwitch.addTarget(self, action: #selector(switchAnimation), for: .valueChanged)
+        return animateSwitch
+    }()
+
+    @objc func switchAnimation(_ sender: UISwitch) {
+        animated = sender.isOn
+    }
 
     private lazy var animator = UIDynamicAnimator(referenceView: view)
     private lazy var behaviors: [DynamicShapeBehavior] = [gravity, collision, elacticity]
@@ -29,22 +48,24 @@ class ViewController: UIViewController, UICollisionBehaviorDelegate {
 
     private let elacticity: UIDynamicItemBehavior = {
         let dynamic = UIDynamicItemBehavior()
-        dynamic.elasticity = 0.9
+        dynamic.elasticity = 1
+        dynamic.resistance = 0
+        dynamic.density = 2
         return dynamic
     }()
 
-    private let dencity: UIDynamicItemBehavior = {
+    private let density: UIDynamicItemBehavior = {
         let dynamic = UIDynamicItemBehavior()
         dynamic.density = 2
         return dynamic
     }()
 
-    open var animated = false{
+    open var animated = false {
         didSet {
             if animated {
-                behaviors.forEach{ animator.addBehavior($0) }
+                behaviors.forEach { animator.addBehavior($0) }
             } else {
-                behaviors.forEach{ animator.addBehavior($0) }
+                behaviors.forEach { animator.removeBehavior($0) }
             }
         }
     }
@@ -62,18 +83,24 @@ class ViewController: UIViewController, UICollisionBehaviorDelegate {
     private var backgroundToken: NSObjectProtocol?
     private let kMaxVelocity: Float = 500
 
-
-
     lazy var supportsHaptics: Bool = {
         return (UIApplication.shared.delegate as? AppDelegate)?.supportsHaptics ?? false
     }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.addSubview(label)
+        view.addSubview(animateSwitch)
+        NSLayoutConstraint.activate([
+            label.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            label.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+            animateSwitch.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+            animateSwitch.topAnchor.constraint(equalTo: label.bottomAnchor)
+        ])
         view.backgroundColor = .white
         createAndStartHapticEngine()
         activateAccelerometer()
-        addObservers()
+//        addObservers()
         view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(makeShape)))
     }
 
@@ -87,8 +114,6 @@ class ViewController: UIViewController, UICollisionBehaviorDelegate {
         self.animated = false
     }
 
-
-
     @objc func makeShape(_ recognizer: UITapGestureRecognizer) {
         let x = recognizer.location(in: view).x
         let y = recognizer.location(in: view).y
@@ -96,48 +121,45 @@ class ViewController: UIViewController, UICollisionBehaviorDelegate {
         let pinch = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch))
         let rotate = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
         let long = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress))
-
-        let shape = ShapeView(
-            shape: ShapeView.Shape(rawValue: .random(in: 0 ..< ShapeView.Shape.allCases.count))!,
-            frame: CGRect(origin: CGPoint(x: x - 0.5 * itemsWight, y: y - 0.5 * itemsHeight),size: CGSize( width: itemsHeight, height: itemsWight)),
+        guard let shape = ShapeView.Shape(rawValue: .random(in: 0 ..< ShapeView.Shape.allCases.count)) else { return }
+        let shapeView = ShapeView(
+            shape: shape,
+            frame: CGRect(origin: CGPoint(x: x - 0.5 * itemsWight, y: y - 0.5 * itemsHeight), size: CGSize( width: itemsHeight, height: itemsWight)),
             color: UIColor(int: .random(in: 1000...100000000)))
-        view.addSubview(shape)
+        view.addSubview(shapeView)
         [pan, pinch, rotate] .forEach {
-            shape.addGestureRecognizer($0)
+            shapeView.addGestureRecognizer($0)
             $0.delegate = self
         }
-        shape.addGestureRecognizer(long)
-        ([gravity,  collision] as [DynamicShapeBehavior]).forEach{ $0.addItem(shape)}
-        if shape.shape == .ellipse {
-            elacticity.addItem(shape)
+        shapeView.addGestureRecognizer(long)
+        ([gravity, collision] as [DynamicShapeBehavior]).forEach { $0.addItem(shapeView) }
+        if shape == .ellipse {
+            elacticity.addItem(shapeView)
         } else {
-            dencity.addItem(shape)
+            density.addItem(shapeView)
         }
-
     }
 
-    @objc func handlePan(recognizer: UIPanGestureRecognizer){
+    @objc func handlePan(recognizer: UIPanGestureRecognizer) {
         guard let recognizerView = recognizer.view as? ShapeView, let superview = recognizerView.superview else { return }
         let translation = recognizer.translation(in: superview)
         switch recognizer.state {
         case .began:
             gravity.removeItem(recognizerView)
         case .changed:
-            recognizerView.shape == .ellipse ? elacticity.removeItem(recognizerView) : dencity.removeItem(recognizerView)
+            recognizerView.shape == .ellipse ? elacticity.removeItem(recognizerView) : density.removeItem(recognizerView)
             collision.removeItem(recognizerView)
             recognizerView.center = CGPoint(x: recognizerView.center.x + translation.x, y: recognizerView.center.y + translation.y)
             recognizer.setTranslation(.zero, in: superview)
             animator.updateItem(usingCurrentState: recognizerView)
-            recognizerView.shape == .ellipse ? elacticity.addItem(recognizerView) : dencity.addItem(recognizerView)
+            recognizerView.shape == .ellipse ? elacticity.addItem(recognizerView) : density.addItem(recognizerView)
             collision.addItem(recognizerView)
         case .ended:
             gravity.addItem(recognizerView)
         default:
             break
         }
-
     }
-
 
     @objc func handlePinch(recognizer: UIPinchGestureRecognizer) {
         guard let recognizerView = recognizer.view as? ShapeView, let superview = recognizerView.superview else { return }
@@ -145,41 +167,36 @@ class ViewController: UIViewController, UICollisionBehaviorDelegate {
         case .began:
             self.gravity.removeItem(recognizerView)
         case .changed:
-            recognizerView.shape == .ellipse ? elacticity.removeItem(recognizerView) : dencity.removeItem(recognizerView)
+            recognizerView.shape == .ellipse ? elacticity.removeItem(recognizerView) : density.removeItem(recognizerView)
             collision.removeItem(recognizerView)
-             //
-            //            recognizerView.transform = recognizerView.transform.scaledBy(x: recognizer.scale, y: recognizer.scale)
             let newWidth = recognizerView.layer.bounds.size.width * recognizer.scale
             let newHeigh = recognizerView.layer.bounds.size.height * recognizer.scale
-            if (newWidth < superview.bounds.width - 50 && newHeigh < superview.bounds.height - 50 && newWidth > 10 && newHeigh > 10) {
-                //                            recognizerView.bounds = recognizerView.bounds.applying(CGAffineTransform(scaleX: recognizer.scale, y: recognizer.scale))
+            if newWidth < superview.bounds.width - 50 && newHeigh < superview.bounds.height - 50 && newWidth > 10 && newHeigh > 10 {
                 recognizerView.layer.bounds.size.width = newWidth
                 recognizerView.layer.bounds.size.height = newHeigh
                 recognizer.scale = 1
-//                animator.updateItem(usingCurrentState: recognizerView)
             }
-            recognizerView.shape == .ellipse ? elacticity.addItem(recognizerView) : dencity.addItem(recognizerView)
+            recognizerView.shape == .ellipse ? elacticity.addItem(recognizerView) : density.addItem(recognizerView)
             collision.addItem(recognizerView)
         case .ended:
             self.gravity.addItem(recognizerView)
         default:
             break
         }
-
     }
 
-    @objc func handleRotation(recognizer: UIRotationGestureRecognizer){
-        guard let recognizerView = recognizer.view as? ShapeView, let _ = recognizerView.superview else { return }
+    @objc func handleRotation(recognizer: UIRotationGestureRecognizer) {
+        guard let recognizerView = recognizer.view as? ShapeView else { return }
         switch recognizer.state {
         case .began:
             gravity.removeItem(recognizerView)
         case .changed:
-            recognizerView.shape == .ellipse ? elacticity.removeItem(recognizerView) : dencity.removeItem(recognizerView)
+            recognizerView.shape == .ellipse ? elacticity.removeItem(recognizerView) : density.removeItem(recognizerView)
             collision.removeItem(recognizerView)
             recognizerView.transform = recognizerView.transform.rotated(by: recognizer.rotation)
             recognizer.rotation = 0
             animator.updateItem(usingCurrentState: recognizerView)
-            recognizerView.shape == .ellipse ? elacticity.addItem(recognizerView) : dencity.addItem(recognizerView)
+            recognizerView.shape == .ellipse ? elacticity.addItem(recognizerView) : density.addItem(recognizerView)
             collision.addItem(recognizerView)
         case .ended:
             gravity.addItem(recognizerView)
@@ -190,129 +207,77 @@ class ViewController: UIViewController, UICollisionBehaviorDelegate {
 
     @objc func handleLongPress(recognizer: UILongPressGestureRecognizer) {
         guard let recognizerView = recognizer.view as? ShapeView, let superview = recognizerView.superview else { return }
-        behaviors.forEach{ $0.removeItem(recognizerView)}
+        behaviors.forEach { $0.removeItem(recognizerView) }
         recognizerView.center = recognizer.location(in: superview)
         generator.impactOccurred()
 
-        UIView.animate(withDuration: 0.2, animations: {recognizerView.alpha = 0.0},
-                       completion: {(value: Bool) in
+        UIView.animate(withDuration: 0.2, animations: { recognizerView.alpha = 0.0 },
+                       completion: {(_: Bool) in
             recognizerView.removeFromSuperview()
         })
     }
-
+}
+extension ViewController: UICollisionBehaviorDelegate {
     private func createAndStartHapticEngine() {
         guard supportsHaptics else { return }
 
         // Create and configure a haptic engine.
         do {
             engine = try CHHapticEngine()
+            try engine.start()
         } catch let error {
             fatalError("Engine Creation Error: \(error)")
-        }
-
-        // The stopped handler alerts engine stoppage.
-        engine.stoppedHandler = { reason in
-            print("Stop Handler: The engine stopped for reason: \(reason.rawValue)")
-            switch reason {
-            case .audioSessionInterrupt:
-                print("Audio session interrupt.")
-            case .applicationSuspended:
-                print("Application suspended.")
-            case .idleTimeout:
-                print("Idle timeout.")
-            case .notifyWhenFinished:
-                print("Finished.")
-            case .systemError:
-                print("System error.")
-            case .engineDestroyed:
-                print("Engine destroyed.")
-            case .gameControllerDisconnect:
-                print("Controller disconnected.")
-            @unknown default:
-                print("Unknown error")
-            }
-
-            // Indicate that the next time the app requires a haptic, the app must call engine.start().
-            self.engineNeedsStart = true
-        }
-
-        // The reset handler notifies the app that it must reload all its content.
-        // If necessary, it recreates all players and restarts the engine in response to a server restart.
-        engine.resetHandler = {
-            print("The engine reset --> Restarting now!")
-
-            // Tell the rest of the app to start the engine the next time a haptic is necessary.
-            self.engineNeedsStart = true
-        }
-
-        // Start haptic engine to prepare for use.
-        do {
-            try engine.start()
-
-            // Indicate that the next time the app requires a haptic, the app doesn't need to call engine.start().
-            engineNeedsStart = false
-        } catch let error {
-            print("The engine failed to start with error: \(error)")
         }
     }
 
     private func activateAccelerometer() {
         // Manage motion events in a separate queue off the main thread.
+
         motionQueue = OperationQueue()
         motionManager = CMMotionManager()
 
         guard let manager = motionManager else { return }
 
-        manager.startDeviceMotionUpdates(to: motionQueue) { deviceMotion, error in
+        manager.startDeviceMotionUpdates(to: motionQueue) { deviceMotion, _ in
             guard let motion = deviceMotion else { return }
 
             let gravity = motion.gravity
 
             // Dispatch gravity updates to main queue, since they affect UI.
             DispatchQueue.main.async {
-                self.gravity.gravityDirection = CGVector(dx: gravity.x,
-                                                         dy: -gravity.y)
+                self.gravity.gravityDirection = CGVector(dx: gravity.x * 5,
+                                                         dy: -gravity.y * 5)
             }
         }
     }
 
-    private func addObservers() {
-
-        backgroundToken = NotificationCenter.default.addObserver(forName: UIApplication.didEnterBackgroundNotification,
-                                                                 object: nil,
-                                                                 queue: nil) { [weak self] _ in
-            guard let self = self, self.supportsHaptics else { return }
-
-            // Stop the haptic engine.
-            self.engine.stop { error in
-                if let error = error {
-                    print("Haptic Engine Shutdown Error: \(error)")
-                    return
-                }
-                self.engineNeedsStart = true
+    func collisionBehavior(_ behavior: UICollisionBehavior, beganContactFor item1: UIDynamicItem, with item2: UIDynamicItem, at point: CGPoint) {
+        do {
+            // Start the engine if necessary.
+            if engineNeedsStart {
+                try engine.start()
+                engineNeedsStart = false
             }
 
-        }
+            // Map the bounce velocity to intensity & sharpness.
+            let velocity = self.elacticity.linearVelocity(for: item1)
+            let xVelocity = Float(velocity.x)
+            let yVelocity = Float(velocity.y)
 
-        foregroundToken = NotificationCenter.default.addObserver(forName: UIApplication.willEnterForegroundNotification,
-                                                                 object: nil,
-                                                                 queue: nil) { [weak self] _ in
-            guard let self = self, self.supportsHaptics else { return }
+            // Normalize magnitude to map one number to haptic parameters:
+            let magnitude = sqrtf(xVelocity * xVelocity + yVelocity * yVelocity)
+            let normalizedMagnitude = min(max(Float(magnitude) / kMaxVelocity, 0.0), 1.0)
 
-            // Restart the haptic engine.
-            self.engine.start { error in
-                if let error = error {
-                    print("Haptic Engine Startup Error: \(error)")
-                    return
-                }
-                self.engineNeedsStart = false
-            }
+            // Create a haptic pattern player from normalized magnitude.
+            let hapticPlayer = try playerForMagnitude(normalizedMagnitude)
+
+            // Start player, fire and forget
+            try hapticPlayer?.start(atTime: CHHapticTimeImmediate)
+        } catch let error {
+            print("Haptic Playback Error: \(error)")
         }
     }
 
-    // pragma mark - UICollisionBehaviorDelegate
-
-    /// - Tag: MapVelocity
     func collisionBehavior(_ behavior: UICollisionBehavior,
                            beganContactFor item: UIDynamicItem,
                            withBoundaryIdentifier identifier: NSCopying?,
@@ -381,5 +346,4 @@ extension ViewController: UIGestureRecognizerDelegate {
             return true
         }
     }
-
 }

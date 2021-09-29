@@ -13,7 +13,7 @@ final class HapticsManager {
     private init() {}
 
     func selectionVirbate() {
-        let selectionFeedbackGenerator  = UISelectionFeedbackGenerator()
+        let selectionFeedbackGenerator = UISelectionFeedbackGenerator()
         selectionFeedbackGenerator.prepare()
         selectionFeedbackGenerator.selectionChanged()
     }

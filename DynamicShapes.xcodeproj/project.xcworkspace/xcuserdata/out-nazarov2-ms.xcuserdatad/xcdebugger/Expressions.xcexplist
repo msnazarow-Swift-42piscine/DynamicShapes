@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "ViewController.handlePinch(recognizer:):ViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "recognizerView.bounds">
+            </PersistentString>
+            <PersistentString
+               value = "recognizerView.frame">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ViewController.gestureRecognizer(_:shouldRecognizeSimultaneouslyWith:):ViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "gestureRecognizer is UILongPressGestureRecognizer">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "AnimatedView.handlePinch(_:):AnimatedView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "recognizer.scale">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ViewController.viewDidLoad():ViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "UIForceTouchCapability.available">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ViewController.makeShape(_:):ViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "view.isFirstResponder">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

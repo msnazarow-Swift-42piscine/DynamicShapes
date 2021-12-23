@@ -11,41 +11,23 @@ import CoreHaptics
 import AudioToolbox
 
 class ViewController: UIViewController {
-    let label: UILabel = {
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.textColor = .gray
-        label.text = "Animated"
-        return label
-    }()
+    // MARK: - Constants
 
-    let animateSwitch: UISwitch = {
-        let animateSwitch = UISwitch()
-        animateSwitch.setOn(true, animated: true)
-        animateSwitch.translatesAutoresizingMaskIntoConstraints = false
-        animateSwitch.addTarget(self, action: #selector(switchAnimation), for: .valueChanged)
-        return animateSwitch
-    }()
-
-    @objc func switchAnimation(_ sender: UISwitch) {
-        animated = sender.isOn
-    }
 
     private lazy var animator = UIDynamicAnimator(referenceView: view)
-    private lazy var behaviors: [DynamicShapeBehavior] = [gravity, collision, elacticity]
 
+    // MARK: - Behaviors
+    private lazy var behaviors: [DynamicShapeBehavior] = [gravity, collision, elacticity]
     private let gravity: UIGravityBehavior = {
         let gravity = UIGravityBehavior()
         return gravity
     }()
-
     private lazy var collision: UICollisionBehavior = {
         let collision = UICollisionBehavior()
         collision.translatesReferenceBoundsIntoBoundary = true
         collision.collisionDelegate = self
         return collision
     }()
-
     private let elacticity: UIDynamicItemBehavior = {
         let dynamic = UIDynamicItemBehavior()
         dynamic.elasticity = 1
@@ -53,14 +35,14 @@ class ViewController: UIViewController {
         dynamic.density = 2
         return dynamic
     }()
-
     private let density: UIDynamicItemBehavior = {
         let dynamic = UIDynamicItemBehavior()
         dynamic.density = 2
         return dynamic
     }()
 
-    open var animated = false {
+    // MARK: - Animated
+    var animated = false {
         didSet {
             if animated {
                 behaviors.forEach { animator.addBehavior($0) }
@@ -69,22 +51,36 @@ class ViewController: UIViewController {
             }
         }
     }
-
-    let itemsHeight: CGFloat = 100
-    let itemsWight: CGFloat = 100
-
-    private var motionManager: CMMotionManager!
-    private var motionQueue: OperationQueue!
-    private var motionData: CMAccelerometerData!
-    private var engine: CHHapticEngine!
-    private let generator = UIImpactFeedbackGenerator(style: .heavy)
-    private var engineNeedsStart = true
-    private var foregroundToken: NSObjectProtocol?
-    private var backgroundToken: NSObjectProtocol?
-    private let kMaxVelocity: Float = 500
-
     lazy var supportsHaptics: Bool = {
         return (UIApplication.shared.delegate as? AppDelegate)?.supportsHaptics ?? false
+    }()
+
+    // MARK: - Managers
+    private var motionManager = CMMotionManager()
+    private var motionQueue = OperationQueue()
+    private var engine = try? CHHapticEngine()
+    private let generator = UIImpactFeedbackGenerator(style: .heavy)
+
+    // MARK: - Properties
+    private var engineNeedsStart = true
+    private let kMaxVelocity: Float = 500
+    private let itemsHeight: CGFloat = 100
+    private let itemsWight: CGFloat = 100
+
+    // MARK: - Views
+    let label: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.textColor = .gray
+        label.text = "Animated 2.0"
+        return label
+    }()
+    let animateSwitch: UISwitch = {
+        let animateSwitch = UISwitch()
+        animateSwitch.setOn(true, animated: true)
+        animateSwitch.translatesAutoresizingMaskIntoConstraints = false
+        animateSwitch.addTarget(self, action: #selector(switchAnimation), for: .valueChanged)
+        return animateSwitch
     }()
 
     override func viewDidLoad() {
@@ -100,8 +96,7 @@ class ViewController: UIViewController {
         view.backgroundColor = .white
         createAndStartHapticEngine()
         activateAccelerometer()
-//        addObservers()
-        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(makeShape)))
+        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(tapGestureRecognized)))
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -114,11 +109,16 @@ class ViewController: UIViewController {
         self.animated = false
     }
 
-    @objc func makeShape(_ recognizer: UITapGestureRecognizer) {
+    // MARK: - Actions
+    @objc func switchAnimation(_ sender: UISwitch) {
+        animated = sender.isOn
+    }
+
+    @objc func tapGestureRecognized(_ recognizer: UITapGestureRecognizer) {
         let x = recognizer.location(in: view).x
         let y = recognizer.location(in: view).y
-        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
-        let pinch = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch))
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(panGestureRecognized))
+        let pinch = UIPinchGestureRecognizer(target: self, action: #selector(pinchGestureRecognizer))
         let rotate = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation))
         let long = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress))
         guard let shape = ShapeView.Shape(rawValue: .random(in: 0 ..< ShapeView.Shape.allCases.count)) else { return }
@@ -140,7 +140,7 @@ class ViewController: UIViewController {
         }
     }
 
-    @objc func handlePan(recognizer: UIPanGestureRecognizer) {
+    @objc func panGestureRecognized(_ recognizer: UIPanGestureRecognizer) {
         guard let recognizerView = recognizer.view as? ShapeView, let superview = recognizerView.superview else { return }
         let translation = recognizer.translation(in: superview)
         switch recognizer.state {
@@ -161,7 +161,7 @@ class ViewController: UIViewController {
         }
     }
 
-    @objc func handlePinch(recognizer: UIPinchGestureRecognizer) {
+    @objc func pinchGestureRecognizer(_ recognizer: UIPinchGestureRecognizer) {
         guard let recognizerView = recognizer.view as? ShapeView, let superview = recognizerView.superview else { return }
         switch recognizer.state {
         case .began:
@@ -211,19 +211,15 @@ class ViewController: UIViewController {
         recognizerView.center = recognizer.location(in: superview)
         generator.impactOccurred()
 
-        UIView.animate(withDuration: 0.2, animations: { recognizerView.alpha = 0.0 },
-                       completion: {(_: Bool) in
+        UIView.animate(withDuration: 0.2, animations: { recognizerView.alpha = 0.0 }) { _ in
             recognizerView.removeFromSuperview()
-        })
+        }
     }
 }
 extension ViewController: UICollisionBehaviorDelegate {
     private func createAndStartHapticEngine() {
-        guard supportsHaptics else { return }
-
-        // Create and configure a haptic engine.
+        guard supportsHaptics, let engine = engine else { return }
         do {
-            engine = try CHHapticEngine()
             try engine.start()
         } catch let error {
             fatalError("Engine Creation Error: \(error)")
@@ -231,27 +227,18 @@ extension ViewController: UICollisionBehaviorDelegate {
     }
 
     private func activateAccelerometer() {
-        // Manage motion events in a separate queue off the main thread.
-
-        motionQueue = OperationQueue()
-        motionManager = CMMotionManager()
-
-        guard let manager = motionManager else { return }
-
-        manager.startDeviceMotionUpdates(to: motionQueue) { deviceMotion, _ in
+        motionManager.startDeviceMotionUpdates(to: motionQueue) { deviceMotion, _ in
             guard let motion = deviceMotion else { return }
-
             let gravity = motion.gravity
-
             // Dispatch gravity updates to main queue, since they affect UI.
             DispatchQueue.main.async {
-                self.gravity.gravityDirection = CGVector(dx: gravity.x * 5,
-                                                         dy: -gravity.y * 5)
+                self.gravity.gravityDirection = CGVector(dx: gravity.x * 5, dy: -gravity.y * 5)
             }
         }
     }
 
     func collisionBehavior(_ behavior: UICollisionBehavior, beganContactFor item1: UIDynamicItem, with item2: UIDynamicItem, at point: CGPoint) {
+        guard let engine = engine else { return }
         do {
             // Start the engine if necessary.
             if engineNeedsStart {
@@ -278,16 +265,17 @@ extension ViewController: UICollisionBehaviorDelegate {
         }
     }
 
-    func collisionBehavior(_ behavior: UICollisionBehavior,
-                           beganContactFor item: UIDynamicItem,
-                           withBoundaryIdentifier identifier: NSCopying?,
-                           at point: CGPoint) {
+    func collisionBehavior(
+        _ behavior: UICollisionBehavior,
+        beganContactFor item: UIDynamicItem,
+        withBoundaryIdentifier identifier: NSCopying?,
+        at point: CGPoint
+    ) {
         // Play collision haptic for supported devices.
-        guard supportsHaptics else { return }
+        guard supportsHaptics, let engine = engine else { return }
 
         // Play haptic here.
         do {
-            // Start the engine if necessary.
             if engineNeedsStart {
                 try engine.start()
                 engineNeedsStart = false
@@ -330,7 +318,7 @@ extension ViewController: UICollisionBehaviorDelegate {
         ], relativeTime: 0)
 
         let pattern = try CHHapticPattern(events: [audioEvent, hapticEvent], parameters: [])
-        return try engine.makePlayer(with: pattern)
+        return try engine?.makePlayer(with: pattern)
     }
 
     private func linearInterpolation(alpha: Float, min: Float, max: Float) -> Float {

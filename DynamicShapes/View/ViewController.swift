@@ -11,9 +11,7 @@ import CoreHaptics
 import AudioToolbox
 
 class ViewController: UIViewController {
-    // MARK: - Constants
-
-
+    // MARK: - Animator
     private lazy var animator = UIDynamicAnimator(referenceView: view)
 
     // MARK: - Behaviors
@@ -58,11 +56,16 @@ class ViewController: UIViewController {
     // MARK: - Managers
     private var motionManager = CMMotionManager()
     private var motionQueue = OperationQueue()
-    private var engine = try? CHHapticEngine()
+    private var engine: CHHapticEngine? = {
+        var engine = try? CHHapticEngine()
+        if ((try? engine?.start()) == nil) {
+            engine = nil
+        }
+        return engine
+    }()
     private let generator = UIImpactFeedbackGenerator(style: .heavy)
 
     // MARK: - Properties
-    private var engineNeedsStart = true
     private let kMaxVelocity: Float = 500
     private let itemsHeight: CGFloat = 100
     private let itemsWight: CGFloat = 100
@@ -72,7 +75,7 @@ class ViewController: UIViewController {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.textColor = .gray
-        label.text = "Animated 2.0"
+        label.text = "Animated 4.0"
         return label
     }()
     let animateSwitch: UISwitch = {
@@ -211,11 +214,12 @@ class ViewController: UIViewController {
         recognizerView.center = recognizer.location(in: superview)
         generator.impactOccurred()
 
-        UIView.animate(withDuration: 0.2, animations: { recognizerView.alpha = 0.0 }) { _ in
+        UIView.animate(withDuration: 0.2, animations: { recognizerView.alpha = 0.0 }, completion: { _ in
             recognizerView.removeFromSuperview()
-        }
+        })
     }
 }
+
 extension ViewController: UICollisionBehaviorDelegate {
     private func createAndStartHapticEngine() {
         guard supportsHaptics, let engine = engine else { return }
@@ -237,32 +241,13 @@ extension ViewController: UICollisionBehaviorDelegate {
         }
     }
 
-    func collisionBehavior(_ behavior: UICollisionBehavior, beganContactFor item1: UIDynamicItem, with item2: UIDynamicItem, at point: CGPoint) {
-        guard let engine = engine else { return }
-        do {
-            // Start the engine if necessary.
-            if engineNeedsStart {
-                try engine.start()
-                engineNeedsStart = false
-            }
-
-            // Map the bounce velocity to intensity & sharpness.
-            let velocity = self.elacticity.linearVelocity(for: item1)
-            let xVelocity = Float(velocity.x)
-            let yVelocity = Float(velocity.y)
-
-            // Normalize magnitude to map one number to haptic parameters:
-            let magnitude = sqrtf(xVelocity * xVelocity + yVelocity * yVelocity)
-            let normalizedMagnitude = min(max(Float(magnitude) / kMaxVelocity, 0.0), 1.0)
-
-            // Create a haptic pattern player from normalized magnitude.
-            let hapticPlayer = try playerForMagnitude(normalizedMagnitude)
-
-            // Start player, fire and forget
-            try hapticPlayer?.start(atTime: CHHapticTimeImmediate)
-        } catch let error {
-            print("Haptic Playback Error: \(error)")
-        }
+    func collisionBehavior(
+        _ behavior: UICollisionBehavior,
+        beganContactFor item1: UIDynamicItem,
+        with item2: UIDynamicItem,
+        at point: CGPoint
+    ) {
+        hapticSound(item: item1)
     }
 
     func collisionBehavior(
@@ -271,28 +256,21 @@ extension ViewController: UICollisionBehaviorDelegate {
         withBoundaryIdentifier identifier: NSCopying?,
         at point: CGPoint
     ) {
-        // Play collision haptic for supported devices.
-        guard supportsHaptics, let engine = engine else { return }
+        hapticSound(item: item)
+    }
 
-        // Play haptic here.
+    private func hapticSound(item: UIDynamicItem) {
+        guard supportsHaptics, engine != nil else { return }
+        // Map the bounce velocity to intensity & sharpness.
+        let velocity = self.elacticity.linearVelocity(for: item)
+        let xVelocity = Float(velocity.x)
+        let yVelocity = Float(velocity.y)
+        // Normalize magnitude to map one number to haptic parameters:
+        let magnitude = sqrtf(xVelocity * xVelocity + yVelocity * yVelocity)
+        let normalizedMagnitude = min(max(Float(magnitude) / kMaxVelocity, 0.0), 1.0)
         do {
-            if engineNeedsStart {
-                try engine.start()
-                engineNeedsStart = false
-            }
-
-            // Map the bounce velocity to intensity & sharpness.
-            let velocity = self.elacticity.linearVelocity(for: item)
-            let xVelocity = Float(velocity.x)
-            let yVelocity = Float(velocity.y)
-
-            // Normalize magnitude to map one number to haptic parameters:
-            let magnitude = sqrtf(xVelocity * xVelocity + yVelocity * yVelocity)
-            let normalizedMagnitude = min(max(Float(magnitude) / kMaxVelocity, 0.0), 1.0)
-
             // Create a haptic pattern player from normalized magnitude.
             let hapticPlayer = try playerForMagnitude(normalizedMagnitude)
-
             // Start player, fire and forget
             try hapticPlayer?.start(atTime: CHHapticTimeImmediate)
         } catch let error {
